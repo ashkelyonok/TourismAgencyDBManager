@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.controller.MainController">
+
+    <top>
+        <!-- Основная панель навигации -->
+        <VBox fx:id="navPanel" spacing="0">
+            <!-- Верхняя строка: схема + меню -->
+            <ToolBar fx:id="mainToolbar">
+                <!-- Кнопка меню (три полоски) -->
+                <Button fx:id="menuButton" text="☰" onAction="#toggleNavigationMode"/>
+
+                <!-- Комбобокс выбора схемы -->
+                <Label text="Схема:"/>
+                <ComboBox fx:id="schemaCombo" prefWidth="220" onAction="#onSchemaSelected"/>
+                <Label fx:id="currentSchemaLabel" text="Текущая: public" style="-fx-padding: 0 0 0 20;"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="База:"/>
+                <Label fx:id="dbNameLabel"/>
+            </ToolBar>
+
+            <!-- Расширенная панель навигации (скрыта по умолчанию) -->
+            <ToolBar fx:id="extendedToolbar" visible="false" managed="false">
+                <!-- Tables меню -->
+                <MenuButton text="Tables" popupSide="BOTTOM">
+                    <items>
+                        <MenuItem text="Create Table" onAction="#createTable"/>
+                        <MenuItem text="Drop Table" onAction="#dropTable"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Refresh Tables" onAction="#refreshTablesList"/>
+                    </items>
+                </MenuButton>
+
+                <!-- Backup меню -->
+                <MenuButton text="Backup" popupSide="BOTTOM">
+                    <items>
+                        <MenuItem text="Create Backup" onAction="#createBackup"/>
+                        <MenuItem text="Restore from Backup" onAction="#restoreBackup"/>
+                    </items>
+                </MenuButton>
+
+                <!-- Settings меню -->
+<!--                <MenuButton text="Settings" popupSide="BOTTOM">-->
+<!--                    <items>-->
+<!--                        <MenuItem text="Application Settings" onAction="#openSettings"/>-->
+<!--                    </items>-->
+<!--                </MenuButton>-->
+
+                <MenuButton text="Export" popupSide="BOTTOM">
+                    <items>
+                        <MenuItem text="Export Current Schema" onAction="#exportCurrentSchema"/>
+                    </items>
+                </MenuButton>
+
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="≡" onAction="#toggleNavigationMode">
+                    <tooltip>
+                        <Tooltip text="Свернуть меню"/>
+                    </tooltip>
+                </Button>
+            </ToolBar>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.2, 0.4">
+            <items>
+                <!-- Левая панель: только таблицы (схемы убраны, т.к. есть комбобокс) -->
+                <VBox spacing="6">
+                    <padding>
+                        <Insets top="8" right="8" bottom="8" left="8"/>
+                    </padding>
+                    <Label text="Таблицы текущей схемы" style="-fx-font-weight: bold;"/>
+                    <ListView fx:id="tablesList" VBox.vgrow="ALWAYS"/>
+                </VBox>
+
+                <!-- Центральная панель: вкладки -->
+                <TabPane tabClosingPolicy="UNAVAILABLE">
+                    <tabs>
+                        <!-- Вкладка 1: Table Data (динамическая) -->
+                        <Tab text="Table Data">
+                            <VBox spacing="8">
+                                <padding>
+                                    <Insets top="8" right="8" bottom="8" left="8"/>
+                                </padding>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <Label fx:id="currentTableLabel" text="Выберите таблицу для просмотра данных" style="-fx-font-weight: bold;"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <!-- Новые кнопки -->
+                                    <Button fx:id="addRecordButton" text="+" onAction="#addNewRecord" style="-fx-font-weight: bold; -fx-min-width: 30;">
+                                        <tooltip>
+                                            <Tooltip text="Добавить запись"/>
+                                        </tooltip>
+                                    </Button>
+                                    <Button fx:id="editRecordButton" text="✎" onAction="#editSelectedRecord" disable="true" style="-fx-min-width: 30;">
+                                        <tooltip>
+                                            <Tooltip text="Редактировать запись"/>
+                                        </tooltip>
+                                    </Button>
+                                    <Button fx:id="deleteRecordButton" text="🗑" onAction="#deleteSelectedRecord" disable="true" style="-fx-min-width: 30;">
+                                        <tooltip>
+                                            <Tooltip text="Удалить запись"/>
+                                        </tooltip>
+                                    </Button>
+                                    <Button text="🔄" onAction="#refreshTableData" style="-fx-min-width: 30;">
+                                        <tooltip>
+                                            <Tooltip text="Обновить данные"/>
+                                        </tooltip>
+                                    </Button>
+                                    <Button text="📊" onAction="#exportCurrentTable" style="-fx-min-width: 30;">
+                                        <tooltip>
+                                            <Tooltip text="Экспорт таблицы в Excel"/>
+                                        </tooltip>
+                                    </Button>
+                                </HBox>
+                                <TableView fx:id="tableView" VBox.vgrow="ALWAYS"/>
+                            </VBox>
+                        </Tab>
+                        <!-- Вкладка 2: Query Editor (зарезервирована) -->
+                        <Tab text="Query">
+                            <VBox spacing="8">
+                                <padding>
+                                    <Insets top="8" right="8" bottom="8" left="8"/>
+                                </padding>
+                                <HBox spacing="8" alignment="CENTER_LEFT">
+                                    <Button text="Выполнить" onAction="#executeQuery"/>
+                                    <Button text="Очистить" onAction="#clearQuery"/>
+                                    <Button text="Сохранить" onAction="#saveCurrentQuery"/>
+                                    <Button text="Удалить" onAction="#deleteSavedQuery"/>
+                                    <ComboBox fx:id="savedQueriesCombo" promptText="Сохраненные запросы" prefWidth="200"/>
+                                    <Button text="📊" onAction="#exportQueryResults" style="-fx-min-width: 30;">
+                                        <tooltip>
+                                            <Tooltip text="Экспорт результатов в Excel"/>
+                                        </tooltip>
+                                    </Button>
+                                </HBox>
+                                <TextArea fx:id="queryTextArea" promptText="Введите SQL запрос здесь..." VBox.vgrow="ALWAYS"/>
+                                <Label text="Результат:" style="-fx-font-weight: bold;"/>
+                                <TableView fx:id="queryResultTable" prefHeight="200" VBox.vgrow="ALWAYS"/>
+                            </VBox>
+                        </Tab>
+                    </tabs>
+                </TabPane>
+            </items>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f0f0f0;">
+            <padding>
+                <Insets top="4" right="8" bottom="4" left="8"/>
+            </padding>
+            <Label fx:id="statusLabel" text="Готово"/>
+        </HBox>
+    </bottom>
+</BorderPane>

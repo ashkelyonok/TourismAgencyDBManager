@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+    id 'application'  // Добавьте, если хотите запускать через gradle run
+    id 'org.openjfx.javafxplugin' version '0.1.0'  // Для JavaFX
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+def lombokVersion = "1.18.38"
+
+dependencies {
+    implementation 'org.postgresql:postgresql:42.7.4'
+    compileOnly("org.projectlombok:lombok:$lombokVersion")
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'  // .xlsx
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'  // .env
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.15.2'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+javafx {
+    version = "21"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+application {
+    mainClass = 'org.example.Main'  //
+}
+
+test {
+    useJUnitPlatform()
+}

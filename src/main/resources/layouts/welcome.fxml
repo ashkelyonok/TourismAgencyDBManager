@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="18" alignment="CENTER" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.WelcomeController" styleClass="root-pane">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label fx:id="titleLabel" style="-fx-font-size:20px; -fx-font-weight:bold;" text="DB Manager"/>
+    <Label fx:id="dbNameLabel" wrapText="true" text="Database: ..."/>
+    <TextArea fx:id="descriptionArea" editable="false" prefRowCount="6" wrapText="true">
+        <text>
+            Program for database management.
+            Functionality: view and choose schemas, create/drop tables, edit data, custom query, create/restore from backup, export results.
+        </text>
+    </TextArea>
+
+    <HBox spacing="12" alignment="CENTER">
+        <Button fx:id="continueButton" text="Go to app" />
+    </HBox>
+</VBox>

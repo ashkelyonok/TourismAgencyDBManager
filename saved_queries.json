@@ -1,0 +1,105 @@
+[ {
+  "name" : "get clients, their orders and payment status",
+  "query" : "SELECT \n    c.id AS client_id,\n    c.email,\n    o.id AS order_id,\n    o.booking_number,\n    o.creation_date AS order_date,\n    o.status AS order_status,\n    \n    -- Расчет стоимости заказа\n    SUM(ot.quantity_people * t.cost) AS tour_cost,\n    COALESCE(SUM(os.additional_cost), 0) AS additional_services_cost,\n    (SUM(ot.quantity_people * t.cost) + COALESCE(SUM(os.additional_cost), 0)) AS total_order_cost,\n    \n    -- Фактические платежи\n    COALESCE(SUM(p.amount), 0) AS total_payments_received,\n    \n    -- Статус оплаты\n    CASE \n        WHEN COALESCE(SUM(p.amount), 0) >= (SUM(ot.quantity_people * t.cost) + COALESCE(SUM(os.additional_cost), 0)) THEN 'Fully Paid'\n        WHEN COALESCE(SUM(p.amount), 0) > 0 THEN 'Partially Paid'\n        ELSE 'Not Paid'\n    END AS payment_status\n\nFROM tourism_agency.clients c\nINNER JOIN tourism_agency.orders o ON c.id = o.client_id\nINNER JOIN tourism_agency.order_tour ot ON o.id = ot.order_id\nINNER JOIN tourism_agency.tours t ON ot.tour_id = t.id\nLEFT JOIN tourism_agency.order_service os ON o.id = os.order_id\nLEFT JOIN tourism_agency.payments p ON o.id = p.order_id AND p.status = 'success'\n\nGROUP BY \n    c.id, c.email, c.phone, c.registration_date,\n    o.id, o.booking_number, o.creation_date, o.status\n\nORDER BY \n    c.id, o.creation_date DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.1. get client's name & phone",
+  "query" : "SELECT full_name, phone FROM employees;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.2. emps with surname on \"D\"",
+  "query" : "SELECT * FROM employees \nWHERE SPLIT_PART(full_name, ' ', 2) LIKE '%D%';",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.3. names and positions of emps who are not consultants",
+  "query" : "SELECT full_name, position FROM employees \nWHERE NOT position = 'consultant';",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.4. names and positions of admins and managers",
+  "query" : "SELECT full_name, position FROM employees \nWHERE position = 'admin' OR position = 'manager';",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.5. clients form Japan with ID>4",
+  "query" : "SELECT * FROM clients\nWHERE address LIKE '%Japan%' AND id > 4;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.6. emps in alfabetic order, hire_date DESC",
+  "query" : "SELECT * FROM employees\nORDER BY full_name ASC, hire_date DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.7. clients, their orders, order statuses, names of ordered tours",
+  "query" : "SELECT \n    pp.name as client_name,\n    pp.surname as client_surname,\n    t.name as tour_name,\n    o.status as order_status\nFROM passports pp\nINNER JOIN clients c ON pp.client_id = c.id\nINNER JOIN orders o ON c.id = o.client_id\nINNER JOIN order_tour ot ON o.id = ot.order_id\nINNER JOIN tours t ON ot.tour_id = t.id;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.8. clients and their orders",
+  "query" : "SELECT \n    pp.name as client_name,\n    pp.surname as client_surname,\n    o.booking_number,\n    o.status\nFROM passports pp\nLEFT JOIN orders o ON pp.client_id = o.client_id;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.9. full join of clients and orders",
+  "query" : "SELECT \n    pp.name as client_name,\n    pp.surname as client_surname,\n    o.booking_number,\n    o.status\nFROM passports pp\nFULL OUTER JOIN orders o ON pp.client_id = o.client_id\nORDER BY \n    CASE WHEN pp.surname IS NULL THEN 1 ELSE 0 END,\n    pp.surname;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "5.10. clients' names to uppercase",
+  "query" : "SELECT \n    UPPER(pp.name) as upper_name,\n    UPPER(pp.surname) as upper_surname,\n    LOWER(c.email) as lower_email\nFROM passports pp\nINNER JOIN clients c ON pp.client_id = c.id;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.1. get orders count DESC",
+  "query" : "SELECT employee_id, COUNT(id) AS order_count\nFROM tourism_agency.orders\nGROUP BY employee_id\n\t\tORDER BY order_count DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.2. emps count by position",
+  "query" : "SELECT \n    position,\n    COUNT(*) AS employees_count\nFROM employees \nGROUP BY position\nORDER BY employees_count DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.3. clients total orders sum if it's >4000",
+  "query" : "SELECT \n    c.email,\n    SUM(ot.subtotal) AS total_orders_sum\nFROM clients c\nJOIN orders o ON c.id = o.client_id\nJOIN order_tour ot ON o.id = ot.order_id\nGROUP BY c.email\nHAVING SUM(ot.subtotal) > 4000\nORDER BY total_orders_sum DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.4. in_cart orders with no client notes",
+  "query" : "SELECT id, booking_number, status, creation_date\nFROM orders \nWHERE status = 'in_cart'\nEXCEPT\nSELECT id, booking_number, status, creation_date  \nFROM orders\nWHERE client_notes IS NOT NULL;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.5. tours with price more than avg_price",
+  "query" : "SELECT \n    name,\n    destination,\n    cost,\n    (SELECT AVG(cost) FROM tours) AS avg_tour_cost\nFROM tours\nWHERE cost > (SELECT AVG(cost) FROM tours)\nORDER BY cost DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.6. total orders by month + revenue",
+  "query" : "SELECT \n    TO_CHAR(creation_date, 'YYYY-MM') AS order_month,\n    COUNT(*) AS orders_count,\n    SUM(ot.subtotal) AS total_revenue\nFROM orders o\nJOIN order_tour ot ON o.id = ot.order_id\nGROUP BY TO_CHAR(creation_date, 'YYYY-MM')\nORDER BY order_month DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.7. amount of orders placed by each emp",
+  "query" : "SELECT \n    e.position,\n    e.full_name,\n    COUNT(o.id) AS processed_orders\nFROM employees e\nLEFT JOIN orders o ON e.id = o.employee_id\nGROUP BY e.position, e.full_name\nORDER BY e.position, processed_orders DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.8. get vip clients (orders' sum>4000)",
+  "query" : "SELECT \n    name AS item_name,\n    cost AS amount,\n    'expensive_tour' AS type\nFROM tours \nWHERE cost > 4500\n\nUNION\n\n-- VIP клиенты\nSELECT \n    c.email AS item_name,\n    SUM(ot.subtotal) AS amount,\n    'vip_client' AS type\nFROM clients c\nJOIN orders o ON c.id = o.client_id  \nJOIN order_tour ot ON o.id = ot.order_id\nGROUP BY c.email\nHAVING SUM(ot.subtotal) > 4000\n\nORDER BY amount DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.9. emps with experience more than avg",
+  "query" : "SELECT \n    full_name,\n    position,\n    hire_date,\n    EXTRACT(YEAR FROM AGE(CURRENT_DATE, hire_date)) * 12 + \n    EXTRACT(MONTH FROM AGE(CURRENT_DATE, hire_date)) AS experience_months\nFROM employees \nWHERE (EXTRACT(YEAR FROM AGE(CURRENT_DATE, hire_date)) * 12 + \n       EXTRACT(MONTH FROM AGE(CURRENT_DATE, hire_date))) > \n      (SELECT AVG(EXTRACT(YEAR FROM AGE(CURRENT_DATE, hire_date)) * 12 + \n                  EXTRACT(MONTH FROM AGE(CURRENT_DATE, hire_date))) \n       FROM employees)\nORDER BY experience_months DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.10. clients' in-cart orders and their amount",
+  "query" : "SELECT \n    c.email,\n    c.phone,\n    COUNT(o.id) AS in_cart_orders_count,\n    STRING_AGG(o.booking_number, ', ') AS booking_numbers\nFROM clients c\nJOIN orders o ON c.id = o.client_id\nWHERE o.status = 'in_cart'\nGROUP BY c.id, c.email, c.phone\nORDER BY in_cart_orders_count DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.11. amount of people for each destination",
+  "query" : "SELECT t.destination, SUM(ot.quantity_people) AS total_people\nFROM tours t\nJOIN order_tour ot ON t.id = ot.tour_id\nGROUP BY t.destination\nORDER BY total_people DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.12. clients' avg cost of orders if it's >3000",
+  "query" : "SELECT CONCAT(p.surname, ' ', p.name) AS full_name, AVG(ot.subtotal) AS avg_order_cost\nFROM clients c\nJOIN passports p ON c.id = p.client_id\nJOIN orders o ON c.id = o.client_id\nJOIN order_tour ot ON o.id = ot.order_id\nGROUP BY p.surname, p.name\nHAVING AVG(ot.subtotal) > 3000\nORDER BY avg_order_cost DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.13. 7-days tours orders",
+  "query" : "SELECT \n    t.name AS tour_name,\n    e.full_name AS employee_name,\n    o.creation_date AS order_date,\n    o.status AS order_status,\n    o.booking_number,\n    t.destination\nFROM tours t\nJOIN order_tour ot ON t.id = ot.tour_id\nJOIN orders o ON ot.order_id = o.id\nJOIN employees e ON o.employee_id = e.id\nWHERE t.duration_days = 7\n  AND o.status IN ('paid', 'booked', 'confirmed', 'in-cart')\nORDER BY o.creation_date DESC, e.full_name;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.14. tours with cost >avg",
+  "query" : "SELECT name, cost FROM tours WHERE cost > (SELECT AVG(cost) FROM tours) ORDER BY cost DESC;",
+  "description" : "Сохраненный запрос"
+}, {
+  "name" : "6.15. clients who have ordered hotels with rating<4.4 + avg order cost",
+  "query" : "SELECT CONCAT(p.surname, ' ', p.name) AS client_name,\n       COUNT(DISTINCT o.id) AS low_rating_orders,\n       AVG(ot.subtotal) AS avg_subtotal\nFROM clients c\nJOIN passports p ON c.id = p.client_id\nJOIN orders o ON c.id = o.client_id\nJOIN order_tour ot ON o.id = ot.order_id\nJOIN tour_hotel th ON ot.tour_id = th.tour_id\nJOIN hotels h ON th.hotel_id = h.id\nWHERE h.rating < 4.4\nGROUP BY p.surname, p.name\nHAVING COUNT(DISTINCT o.id) > 0\n\t\tORDER BY avg_subtotal DESC;",
+  "description" : "Сохраненный запрос"
+} ]
